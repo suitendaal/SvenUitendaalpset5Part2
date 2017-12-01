@@ -57,7 +57,6 @@ public class RestoAdapter extends ResourceCursorAdapter {
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-
                     }
                 }
         );

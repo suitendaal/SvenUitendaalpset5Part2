@@ -9,12 +9,15 @@ import android.support.v4.app.DialogFragment;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.NumberPicker;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.android.volley.Request;
@@ -36,6 +39,7 @@ public class OrderFragment extends DialogFragment implements View.OnClickListene
     RestoAdapter restoAdapter;
     ListView listView;
     Context theContext;
+    TextView totalPrice;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -45,6 +49,8 @@ public class OrderFragment extends DialogFragment implements View.OnClickListene
 
         View rootView = inflater.inflate(R.layout.fragment_order, container, false);
         listView = rootView.findViewById(R.id.orderList);
+
+        totalPrice = rootView.findViewById(R.id.total_price);
 
         Button cancelButton = rootView.findViewById(R.id.button_cancel);
         cancelButton.setOnClickListener(this);
@@ -70,22 +76,18 @@ public class OrderFragment extends DialogFragment implements View.OnClickListene
     private void updateView() {
         restoAdapter = new RestoAdapter(theContext.getApplicationContext(), db.selectAll());
         listView.setAdapter(restoAdapter);
+        totalPrice.setText(db.getTotalPrice());
     }
 
     @Override
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.button_place_order:
-                placeOrder(3);
+                orderTime(db.getTotalPrice());
             case R.id.button_cancel:
                 closeFragment();
                 break;
         }
-    }
-
-    private void placeOrder(float totalPrice) {
-        String price = "€" + String.format("%.02f", totalPrice);
-        orderTime(price);
     }
 
     private void closeFragment() {
@@ -104,8 +106,14 @@ public class OrderFragment extends DialogFragment implements View.OnClickListene
             @Override
             public void onResponse(JSONObject response) {
                 try {
-                    String text = response.getString("preparation_time");
-                    getPlaceOrderDialog("Total price: " + price + "\nEstimated order time: " + text + " minutes");
+                    if (price.equals("€0,00")) {
+                        MainActivity.apology("Please choose items to order", theContext);
+                    }
+                    else {
+                        String text = response.getString("preparation_time");
+                        getPlaceOrderDialog("Total price: " + price + "\nEstimated order time: " + text + " minutes");
+                    }
+
             }
                 catch (JSONException exception) {
                     MainActivity.apology("No order time available", theContext);
@@ -148,10 +156,8 @@ public class OrderFragment extends DialogFragment implements View.OnClickListene
             alertDialogBuilder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface arg0, int arg1) {
-                    db.addItem(id);
-//                    db.deleteOneItem(id);
+                    db.addItem(id, 1);
                     MainActivity.apology(itemTitle + " added", theContext);
-
                     updateView();
                 }
             });
@@ -162,9 +168,55 @@ public class OrderFragment extends DialogFragment implements View.OnClickListene
                 }
             });
 
+            alertDialogBuilder.setNeutralButton("Add more",new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    addMore(itemTitle, id);
+                }
+            });
+
             AlertDialog alertDialog = alertDialogBuilder.create();
             alertDialog.show();
         }
+    }
+
+    private void addMore(final String itemTitle, final long itemId) {
+        RelativeLayout linearLayout = new RelativeLayout(theContext);
+        final NumberPicker aNumberPicker = new NumberPicker(theContext);
+        aNumberPicker.setMaxValue(50);
+        aNumberPicker.setMinValue(1);
+
+        RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(50, 50);
+        RelativeLayout.LayoutParams numPicerParams = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
+        numPicerParams.addRule(RelativeLayout.CENTER_HORIZONTAL);
+
+        linearLayout.setLayoutParams(params);
+        linearLayout.addView(aNumberPicker,numPicerParams);
+
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(theContext);
+        alertDialogBuilder.setTitle("How many?");
+        alertDialogBuilder.setView(linearLayout);
+        alertDialogBuilder
+                .setCancelable(false)
+                .setPositiveButton("Ok",
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog,
+                                                int id) {
+                                int amount = aNumberPicker.getValue();
+                                db.addItem(itemId, amount);
+                                MainActivity.apology(amount + " " + itemTitle + " added", theContext);
+                                updateView();
+                            }
+                        })
+                .setNegativeButton("Cancel",
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog,
+                                                int id) {
+                                dialog.cancel();
+                            }
+                        });
+        AlertDialog alertDialog = alertDialogBuilder.create();
+        alertDialog.show();
     }
 
     private class GoItemLongClickListener implements AdapterView.OnItemLongClickListener {
@@ -182,7 +234,6 @@ public class OrderFragment extends DialogFragment implements View.OnClickListene
                 public void onClick(DialogInterface arg0, int arg1) {
                     db.delete(id);
                     MainActivity.apology(itemTitle + " deleted", theContext);
-
                     updateView();
                 }
             });
@@ -197,6 +248,8 @@ public class OrderFragment extends DialogFragment implements View.OnClickListene
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
                     db.deleteOneItem(id);
+                    MainActivity.apology("One " + itemTitle + " deleted", theContext);
+                    updateView();
                 }
             });
 

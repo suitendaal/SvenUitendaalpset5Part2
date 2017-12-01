@@ -17,30 +17,64 @@
         android:id="@+id/orderList"
         android:layout_width="match_parent"
         android:layout_height="200sp"
-        android:layout_marginBottom="50sp"
-        android:layout_marginTop="50sp" />
+        android:layout_marginTop="50sp">
+
+    </ListView>
+
+    <TextView
+        android:id="@+id/textView3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="240sp"
+        android:text="_____________________________________"
+        android:textAlignment="center" />
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="260sp"
+        android:layout_marginBottom="60sp">
+
+        <TextView
+            android:id="@+id/textView4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="left|center_vertical"
+            android:layout_marginLeft="30sp"
+            android:text="Total price"
+            android:textSize="20sp" />
+
+        <TextView
+            android:id="@+id/total_price"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="right|center_vertical"
+            android:layout_marginRight="50sp"
+            android:text="€3"
+            android:textSize="24sp" />
+    </FrameLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
         android:layout_marginBottom="10sp"
-        android:orientation="horizontal" >
+        android:orientation="horizontal">
 
         <Button
             android:id="@+id/button_cancel"
             android:layout_width="0px"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
             android:layout_marginLeft="10sp"
+            android:layout_weight="1"
             android:text="Cancel" />
 
         <Button
             android:id="@+id/button_place_order"
             android:layout_width="0px"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
             android:layout_marginRight="10sp"
+            android:layout_weight="1"
             android:text="Place Order" />
     </LinearLayout>
 </FrameLayout>

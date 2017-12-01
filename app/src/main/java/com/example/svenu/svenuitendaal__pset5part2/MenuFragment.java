@@ -1,6 +1,7 @@
 package com.example.svenu.svenuitendaal__pset5part2;
 
 
+import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -12,6 +13,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.NumberPicker;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.android.volley.Request;
@@ -36,7 +39,8 @@ public class MenuFragment extends ListFragment {
     ArrayList<ItemMenu> items = new ArrayList<>();
     RequestQueue queue;
     MenuAdapter theAdapter;
-    MainActivity mainActivity;
+    Context theContext;
+    RestoDatabase db;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -45,9 +49,10 @@ public class MenuFragment extends ListFragment {
         Bundle arguments = this.getArguments();
         final String category = arguments.getString("category");
 
-        mainActivity = new MainActivity();
+        theContext = getActivity();
         queue = Volley.newRequestQueue(this.getContext());
         theAdapter = new MenuAdapter(getActivity().getApplicationContext(), items);
+        db = RestoDatabase.getInstance(theContext);
 
         // Get categories.
         String url = "https://resto.mprog.nl/menu";
@@ -75,14 +80,14 @@ public class MenuFragment extends ListFragment {
                     MenuFragment.this.setListAdapter(theAdapter);
                 }
                 catch (JSONException exception) {
-                    mainActivity.apology("That didn't work!");
+                    MainActivity.apology("That didn't work!", theContext);
                 }
 
             }
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                mainActivity.apology("No internet connection", getContext());
+                MainActivity.apology("No internet connection", theContext);
             }
         });
 
@@ -116,14 +121,12 @@ public class MenuFragment extends ListFragment {
         alertDialogBuilder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface arg0, int arg1) {
-                RestoDatabase db = RestoDatabase.getInstance(getContext());
-
                 boolean result = db.addItem(item, price, image, 1);
                 if (result) {
-                    mainActivity.apology(item + " ordered!", getContext());
+                    MainActivity.apology(item + " ordered!", theContext);
                 }
                 else {
-                    mainActivity.apology("Something went wrong", getContext());
+                    MainActivity.apology("Something went wrong", theContext);
                 }
 
                 CategoriesFragment categoriesFragment = new CategoriesFragment();
@@ -141,8 +144,52 @@ public class MenuFragment extends ListFragment {
             }
         });
 
+        alertDialogBuilder.setNeutralButton("Add more",new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                addMore(item, price, image);
+            }
+        });
+
         AlertDialog alertDialog = alertDialogBuilder.create();
         alertDialog.show();
     }
 
+    private void addMore(final String item, final float price, final String image) {
+        RelativeLayout linearLayout = new RelativeLayout(theContext);
+        final NumberPicker aNumberPicker = new NumberPicker(theContext);
+        aNumberPicker.setMaxValue(50);
+        aNumberPicker.setMinValue(1);
+
+        RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(50, 50);
+        RelativeLayout.LayoutParams numPicerParams = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
+        numPicerParams.addRule(RelativeLayout.CENTER_HORIZONTAL);
+
+        linearLayout.setLayoutParams(params);
+        linearLayout.addView(aNumberPicker,numPicerParams);
+
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(theContext);
+        alertDialogBuilder.setTitle("How many?");
+        alertDialogBuilder.setView(linearLayout);
+        alertDialogBuilder
+                .setCancelable(false)
+                .setPositiveButton("Ok",
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog,
+                                                int id) {
+                                int amount = aNumberPicker.getValue();
+                                db.addItem(item, price, image, amount);
+                                MainActivity.apology(amount + " " + item + " added", theContext);
+                            }
+                        })
+                .setNegativeButton("Cancel",
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog,
+                                                int id) {
+                                dialog.cancel();
+                            }
+                        });
+        AlertDialog alertDialog = alertDialogBuilder.create();
+        alertDialog.show();
+    }
 }

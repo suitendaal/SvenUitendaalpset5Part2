@@ -74,7 +74,7 @@ public class RestoDatabase extends SQLiteOpenHelper {
             ContentValues contentValues = new ContentValues();
             contentValues.put(COL2, name);
             contentValues.put(COL3, price);
-            contentValues.put(COL4, 1);
+            contentValues.put(COL4, amount);
             contentValues.put(COL5, imageUrl);
 
             long result = db.insert(TABLE_NAME, null, contentValues);
@@ -87,9 +87,9 @@ public class RestoDatabase extends SQLiteOpenHelper {
         }
     }
 
-    public boolean addItem(long id) {
+    public boolean addItem(long id, int amount) {
         SQLiteDatabase db = this.getWritableDatabase();
-        String query = "UPDATE " + TABLE_NAME + " SET " + COL4 + " = " + COL4 + " + 1 WHERE " + COL1 + " = '" + id + "';";
+        String query = "UPDATE " + TABLE_NAME + " SET " + COL4 + " = " + COL4 + " + " + amount + " WHERE " + COL1 + " = '" + id + "';";
         db.execSQL(query);
         return true;
     }
@@ -118,7 +118,12 @@ public class RestoDatabase extends SQLiteOpenHelper {
         }
     }
 
-//    public String getTotalPrice() {
-//
-//    }
+    public String getTotalPrice() {
+        Cursor cursor = selectAll();
+        float total = 0;
+        while (cursor.moveToNext()) {
+            total = total + cursor.getFloat(cursor.getColumnIndex(COL3)) * cursor.getFloat(cursor.getColumnIndex(COL4));
+        }
+        return "€" + String.format("%.02f", total);
+    }
 }
