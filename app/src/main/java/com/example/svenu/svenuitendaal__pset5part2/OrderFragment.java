@@ -63,9 +63,12 @@ public class OrderFragment extends DialogFragment implements View.OnClickListene
     public void onViewStateRestored(@Nullable Bundle savedInstanceState) {
         super.onViewStateRestored(savedInstanceState);
 
-        db = RestoDatabase.getInstance(getActivity().getApplicationContext());
-        restoAdapter = new RestoAdapter(getActivity().getApplicationContext(), db.selectAll());
+        db = RestoDatabase.getInstance(theContext.getApplicationContext());
+        updateView();
+    }
 
+    private void updateView() {
+        restoAdapter = new RestoAdapter(theContext.getApplicationContext(), db.selectAll());
         listView.setAdapter(restoAdapter);
     }
 
@@ -140,7 +143,7 @@ public class OrderFragment extends DialogFragment implements View.OnClickListene
             TextView itemNameTextView = view.findViewById(R.id.item_title);
             final String itemTitle = itemNameTextView.getText().toString();
 
-            final AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(getActivity());
+            final AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(theContext);
             alertDialogBuilder.setMessage("Are you sure you want to add " + itemTitle + "?");
             alertDialogBuilder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                 @Override
@@ -149,8 +152,7 @@ public class OrderFragment extends DialogFragment implements View.OnClickListene
 //                    db.deleteOneItem(id);
                     MainActivity.apology(itemTitle + " added", theContext);
 
-                    restoAdapter = new RestoAdapter(getActivity().getApplicationContext(), db.selectAll());
-                    listView.setAdapter(restoAdapter);
+                    updateView();
                 }
             });
 
@@ -173,7 +175,7 @@ public class OrderFragment extends DialogFragment implements View.OnClickListene
             TextView itemNameTextView = view.findViewById(R.id.item_title);
             final String itemTitle = itemNameTextView.getText().toString();
 
-            final AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(getActivity());
+            final AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(theContext);
             alertDialogBuilder.setMessage("Are you sure you want to delete " + itemTitle + "?");
             alertDialogBuilder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                 @Override
@@ -181,14 +183,20 @@ public class OrderFragment extends DialogFragment implements View.OnClickListene
                     db.delete(id);
                     MainActivity.apology(itemTitle + " deleted", theContext);
 
-                    restoAdapter = new RestoAdapter(getActivity().getApplicationContext(), db.selectAll());
-                    listView.setAdapter(restoAdapter);
+                    updateView();
                 }
             });
 
             alertDialogBuilder.setNegativeButton("No",new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
+                }
+            });
+
+            alertDialogBuilder.setNeutralButton("Delete one",new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    db.deleteOneItem(id);
                 }
             });
 

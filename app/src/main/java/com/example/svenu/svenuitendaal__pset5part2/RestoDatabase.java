@@ -104,15 +104,21 @@ public class RestoDatabase extends SQLiteOpenHelper {
         String query = "SELECT * FROM " + TABLE_NAME + " WHERE " + COL1 + " = " + id + ";";
         Cursor data = db.rawQuery(query, null);
 
+        data.moveToFirst();
+
         int amount = data.getInt(data.getColumnIndex(COL4));
 
         if (amount == 1) {
             String new_query = "DELETE FROM " + TABLE_NAME + " WHERE " + COL1 + " = " + id;
-            db.execSQL(new_query, null);
+            db.execSQL(new_query);
         }
         else {
             String new_query = "UPDATE " + TABLE_NAME + " SET " + COL4 + " = " + COL4 + " - 1 WHERE " + COL1 + " = " + id;
-            db.execSQL(new_query, null);
+            db.execSQL(new_query);
         }
     }
+
+//    public String getTotalPrice() {
+//
+//    }
 }
